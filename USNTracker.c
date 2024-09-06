@@ -41,54 +41,158 @@ BOOL GetFullPathByFileReference(HANDLE hVol, DWORDLONG fileReferenceNumber, wcha
 }
 
 // Function to decode and print the event reason
-void PrintEventReason(DWORD reason) {
+void PrintEventReason(DWORD reason, HANDLE CSVHandle){
+
+    wchar_t EventReasons[1024] = {0};
+    int FirstReason = 1;
 
     // This seems stupid and it is but not much of a better way to do it
-    if(reason & USN_REASON_FILE_CREATE)
+    if(reason & USN_REASON_FILE_CREATE){
         wprintf(L"  - File created\n");
-    if(reason & USN_REASON_FILE_DELETE)
+        if(!FirstReason)
+            wcscat(EventReasons, L" | ");
+        FirstReason = 0;
+        wcscat(EventReasons, L"File created");
+    }
+    if(reason & USN_REASON_FILE_DELETE){
         wprintf(L"  - File deleted\n");
-    if(reason & USN_REASON_DATA_OVERWRITE)
+        if(!FirstReason)
+            wcscat(EventReasons, L" | ");
+        FirstReason = 0;
+        wcscat(EventReasons, L"File deleted");
+    }
+    if(reason & USN_REASON_DATA_OVERWRITE){
         wprintf(L"  - Data overwritten\n");
-    if(reason & USN_REASON_DATA_EXTEND)
+        if(!FirstReason)
+            wcscat(EventReasons, L" | ");
+        FirstReason = 0;
+        wcscat(EventReasons, L"Data overwritten");
+    }
+    if(reason & USN_REASON_DATA_EXTEND){
         wprintf(L"  - Data extended\n");
-    if(reason & USN_REASON_DATA_TRUNCATION)
+        if(!FirstReason)
+            wcscat(EventReasons, L" | ");
+        FirstReason = 0;
+        wcscat(EventReasons, L"Data extended");
+    }
+    if(reason & USN_REASON_DATA_TRUNCATION){
         wprintf(L"  - Data truncated\n");
-    if(reason & USN_REASON_RENAME_NEW_NAME)
+        if(!FirstReason)
+            wcscat(EventReasons, L" | ");
+        FirstReason = 0;
+        wcscat(EventReasons, L"Data truncated");
+    }
+    if(reason & USN_REASON_RENAME_NEW_NAME){
         wprintf(L"  - Renamed (new name)\n");
-    if(reason & USN_REASON_RENAME_OLD_NAME)
+        if(!FirstReason)
+            wcscat(EventReasons, L" | ");
+        FirstReason = 0;
+        wcscat(EventReasons, L"Renamed (new name");
+    }
+    if(reason & USN_REASON_RENAME_OLD_NAME){
         wprintf(L"  - Renamed (old name)\n");
-    if(reason & USN_REASON_CLOSE)
+        if(!FirstReason)
+            wcscat(EventReasons, L" | ");
+        FirstReason = 0;
+        wcscat(EventReasons, L"Renamed (old name)");
+    }
+    if(reason & USN_REASON_CLOSE){
         wprintf(L"  - File closed\n");
-    if(reason & USN_REASON_SECURITY_CHANGE)
+        if(!FirstReason)
+            wcscat(EventReasons, L" | ");
+        FirstReason = 0;
+        wcscat(EventReasons, L"File closed");
+    }
+    if(reason & USN_REASON_SECURITY_CHANGE){
         wprintf(L"  - Security changed\n");
-    if(reason & USN_REASON_BASIC_INFO_CHANGE)
+        if(!FirstReason)
+            wcscat(EventReasons, L" | ");
+        FirstReason = 0;
+        wcscat(EventReasons, L"Security changed");
+    }
+    if(reason & USN_REASON_BASIC_INFO_CHANGE){
         wprintf(L"  - Basic info changed\n");
-    if(reason & USN_REASON_EA_CHANGE)
+        if(!FirstReason)
+            wcscat(EventReasons, L" | ");
+        FirstReason = 0;
+        wcscat(EventReasons, L"Basic info changed");
+    }
+    if(reason & USN_REASON_EA_CHANGE){
         wprintf(L"  - Extended attributes changed\n");
-    if(reason & USN_REASON_INDEXABLE_CHANGE)
+        if(!FirstReason)
+            wcscat(EventReasons, L" | ");
+        FirstReason = 0;
+        wcscat(EventReasons, L"Extended attributes changed");
+    }
+    if(reason & USN_REASON_INDEXABLE_CHANGE){
         wprintf(L"  - Indexing status changed\n");
-    if(reason & USN_REASON_HARD_LINK_CHANGE)
+        if(!FirstReason)
+            wcscat(EventReasons, L" | ");
+        FirstReason = 0;
+        wcscat(EventReasons, L"Indexing status changed");
+    }
+    if(reason & USN_REASON_HARD_LINK_CHANGE){
         wprintf(L"  - Hard link changed\n");
-    if(reason & USN_REASON_COMPRESSION_CHANGE)
+        if(!FirstReason)
+            wcscat(EventReasons, L" | ");
+        FirstReason = 0;
+        wcscat(EventReasons, L"Hard link changed");
+    }
+    if(reason & USN_REASON_COMPRESSION_CHANGE){
         wprintf(L"  - Compression changed\n");
-    if(reason & USN_REASON_ENCRYPTION_CHANGE)
-        wprintf(L"  - Encryption changed\n");
-    if(reason & USN_REASON_OBJECT_ID_CHANGE)
+        if(!FirstReason)
+            wcscat(EventReasons, L" | ");
+        FirstReason = 0;
+        wcscat(EventReasons, L"Compression changed");
+    }
+    if(reason & USN_REASON_ENCRYPTION_CHANGE){
+        wprintf(L"  - Encryption changed\n");if(!FirstReason)
+            wcscat(EventReasons, L" | ");
+        FirstReason = 0;
+        wcscat(EventReasons, L"Encryption changed");
+    }
+    if(reason & USN_REASON_OBJECT_ID_CHANGE){
         wprintf(L"  - Object ID changed\n");
-    if(reason & USN_REASON_REPARSE_POINT_CHANGE)
+        if(!FirstReason)
+            wcscat(EventReasons, L" | ");
+        FirstReason = 0;
+        wcscat(EventReasons, L"Object ID changed");
+    }
+    if(reason & USN_REASON_REPARSE_POINT_CHANGE){
         wprintf(L"  - Reparse point changed\n");
-    if(reason & USN_REASON_STREAM_CHANGE)
+        if(!FirstReason)
+            wcscat(EventReasons, L" | ");
+        FirstReason = 0;
+        wcscat(EventReasons, L"Reparse point changed");
+    }
+    if(reason & USN_REASON_STREAM_CHANGE){
         wprintf(L"  - Stream changed\n");
+        if(!FirstReason)
+            wcscat(EventReasons, L" | ");
+        FirstReason = 0;
+        wcscat(EventReasons, L"Stream changed");
+    }
+
+    wcscat(EventReasons, L"\n");
+
+    DWORD bytesWritten;
+    WriteFile(CSVHandle, EventReasons, (DWORD)sizeof(EventReasons), &bytesWritten, NULL);
 }
 
 // Function to print file event message with full path and details
-void PrintFileEventMessage(LPCWSTR fullPath, DWORD reason, USN Usn){
+void PrintFileEventMessage(LPCWSTR fullPath, DWORD reason, USN Usn, HANDLE CSVHandle){
+
+    wchar_t FileNameAndID[1024] = {0};
 
     printf("%lld- ", Usn);
 
     wprintf(L"File: %s\n", fullPath);
-    PrintEventReason(reason);
+    PrintEventReason(reason, CSVHandle);
+
+    swprintf(FileNameAndID, sizeof(FileNameAndID) / sizeof(FileNameAndID[0]), L"%lld, %s, ", Usn, fullPath);
+
+    DWORD bytesWritten;
+    WriteFile(CSVHandle, FileNameAndID, (DWORD)sizeof(FileNameAndID), &bytesWritten, NULL);
 }
 
 int IsRunningAsAdmin(){
@@ -113,7 +217,7 @@ int IsRunningAsAdmin(){
 int RestartAsAdmin(int argc, wchar_t* argv[]){
 
     // Build the argument list to pass to the elevated instance
-    wchar_t commandLine[1024] = { 0 };
+    wchar_t commandLine[1024] = {0};
 
     for(int i = 1; i < argc; i++){
         wcscat(commandLine, L"\"");
@@ -143,12 +247,41 @@ int RestartAsAdmin(int argc, wchar_t* argv[]){
     return 0; // Elevated process will restart
 }
 
-int wmain(int argc, wchar_t* argv[]) {
+int wmain(int argc, wchar_t* argv[]){
 
     // Make sure program is run as admin
     // and prompt to run as admin if not
     if(!IsRunningAsAdmin())
         return RestartAsAdmin(argc, argv);
+
+    const LPCWSTR CSVFileName = L"USNLogs.csv";
+
+    // Check if CSV file already exists
+    DWORD CSVFileAttributes = GetFileAttributes(CSVFileName);
+    int CSVAlreadyExists = (CSVFileAttributes != INVALID_FILE_ATTRIBUTES && !(CSVFileAttributes & FILE_ATTRIBUTE_DIRECTORY));
+
+    //printf(CSVAlreadyExists ? "CSV Already Exists" : "CSV Doesn't Exist");
+
+    HANDLE OutputCSV = CreateFile(
+        CSVFileName,               // File name
+        FILE_APPEND_DATA,            // Append data
+        FILE_SHARE_READ | FILE_SHARE_WRITE,  // Allow other processes to read/write
+        NULL,                        // Default security
+        OPEN_ALWAYS,                 // Open existing or create new file
+        FILE_ATTRIBUTE_NORMAL,       // Normal file
+        NULL                         // No template file
+    );
+
+    if (OutputCSV == INVALID_HANDLE_VALUE) {
+        MessageBox(NULL, L"Failed to create/open USNLogs.csv", L"File Error", MB_OK | MB_ICONERROR);
+        return 1;
+    }
+
+    const char *data = "ID, FileName, Changes\n";
+    DWORD bytesWritten;
+
+    if(!CSVAlreadyExists)
+        WriteFile(OutputCSV, data, (DWORD)strlen(data), &bytesWritten, NULL);
 
     HANDLE hVol = INVALID_HANDLE_VALUE;
     DWORD bytesReturned = 0;
@@ -193,7 +326,8 @@ int wmain(int argc, wchar_t* argv[]) {
     readData.ReturnOnlyOnClose = FALSE;
     readData.Timeout = 0;
 
-    while (TRUE) {
+    while(TRUE){
+
         readData.StartUsn = lastUsn;
 
         // Results in a max of ~800 logs a second
@@ -211,7 +345,7 @@ int wmain(int argc, wchar_t* argv[]) {
                     // Check if the file is in the specified folder
                     if (IsFileInFolder(fullPath, targetFolder)) {
                         // Print event message if the file is in the target folder
-                        PrintFileEventMessage(fullPath, usnRecord->Reason, usnRecord->Usn);
+                        PrintFileEventMessage(fullPath, usnRecord->Reason, usnRecord->Usn, OutputCSV);
                     }
                 }
 
