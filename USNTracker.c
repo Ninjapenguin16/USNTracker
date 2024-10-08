@@ -460,9 +460,6 @@ int wmain(int argc, wchar_t* argv[]){
         }
     }
 
-    WhitelistEnabled = 1;
-    ReadFileToArray(L".\\Lists\\Whitelist.txt", &Whitelists, &NumOfWhitelists);
-
     const LPCWSTR CSVFileName = L"USNLogs.csv";
 
     // Check if CSV file already exists
