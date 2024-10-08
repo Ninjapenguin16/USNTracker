@@ -1,3 +1,4 @@
+.gitignore
 .vscode
 USNLogs.csv
 ProductionBuild.bat
