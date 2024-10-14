@@ -6,3 +6,10 @@ It is ready to use out of the box but if you intend to use the blacklist or whit
 
 
 It should be able to compile with any Windows C compiler as long as Unicode support is enabled. On GCC this is done with the -municode flag
+
+
+## Program Options
+-b            | Enable the blacklist\
+-w            | Enable the whitelist\
+-f            | Specify a custom parent folder, default is C:\ (Cannot be outside the C: Drive for now)\
+-h or --help  | Display the program options shown here
