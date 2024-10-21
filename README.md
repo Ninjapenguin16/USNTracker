@@ -7,7 +7,7 @@ It is ready to use out of the box but if you intend to use the blacklist or whit
 
 It should be able to compile with any Windows C compiler as long as Unicode support is enabled. On GCC this is done with the -municode flag
 
-All paths given to the program, both in the list files and with the -f flag, must not end with '\' or it will be misread
+All paths given to the program, both in the list files and with the -f flag, must not end with '\\' or it will be misread
 
 ## Program Options
 -b            | Enable the blacklist\
