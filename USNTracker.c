@@ -435,7 +435,6 @@ int wmain(int argc, wchar_t* argv[]){
     if(!IsRunningAsAdmin())
         return RestartAsAdmin(argc, argv);
 
-    BOOL CustomFolder = 0;
     BOOL BlacklistEnabled = 0;
     BOOL WhitelistEnabled = 0;
 
@@ -449,7 +448,6 @@ int wmain(int argc, wchar_t* argv[]){
 
     for(int i = 1; i < argc; i++){
         if(!wcscmp(argv[i], L"-f")){
-            CustomFolder = 1;
             targetFolder = argv[++i];
         }
         else if(!wcscmp(argv[i], L"-b")){
