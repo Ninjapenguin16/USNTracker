@@ -237,11 +237,11 @@ void PrintFileEventMessage(LPCWSTR fullPath, DWORD reason, USN Usn, LPSYSTEMTIME
 
     swprintf(FileNameAndID, sizeof(FileNameAndID) / sizeof(FileNameAndID[0]), L"%lld, %02u/%02u/%u, %02u:%02u:%02u, %s, ", Usn, LocalTime.wMonth, LocalTime.wDay, LocalTime.wYear, LocalTime.wHour, LocalTime.wMinute, LocalTime.wSecond, fullPath);
 
+    WriteWideStringAsUTF8(FileNameAndID);
+
     PrintEventReason(reason, EventReasons);
 
     swprintf(EventString, sizeof(EventString) / sizeof(EventString[0]), L"%s, %s", fullPath, EventReasons);
-
-    WriteWideStringAsUTF8(FileNameAndID);
 
     // Create a pointer array to hold the event message
     LPCWSTR EventStringArray[1];
@@ -425,8 +425,10 @@ int ReadFileToArray(LPCWSTR filename, LPCWSTR **lines, int *lineCount){
 int wmain(int argc, wchar_t* argv[]){
 
     if(argc != 1)
-        if(!wcscmp(argv[1], L"--help") || !wcscmp(argv[1], L"-h"))
-            printf("USNTracker.exe [Options]\n\n-f (folderPath) | Only include events from this folder and its subfolders\n\n-b | Enable folder blacklist\n\n-w | Enable folder whitelist");
+        if(!wcscmp(argv[1], L"--help") || !wcscmp(argv[1], L"-h")){
+            printf("USNTracker.exe [Options]\n-f (folderPath)\t\t\tOnly include events from this folder and its subfolders\n-b | Enable folder blacklist\n-w | Enable folder whitelist");
+            return 0;
+        }
 
     // Make sure program is run as admin
     // and prompt to run as admin if not
@@ -448,7 +450,7 @@ int wmain(int argc, wchar_t* argv[]){
     for(int i = 1; i < argc; i++){
         if(!wcscmp(argv[i], L"-f")){
             CustomFolder = 1;
-            targetFolder = argv[i + 1];
+            targetFolder = argv[++i];
         }
         else if(!wcscmp(argv[i], L"-b")){
             BlacklistEnabled = 1;
@@ -504,8 +506,11 @@ int wmain(int argc, wchar_t* argv[]){
     USN_JOURNAL_DATA usnJournalData;
     USN lastUsn = 0;
 
-    // Open file pointer to the C drive
-    hVol = CreateFileW(L"\\\\.\\C:", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+    WCHAR TargetDrive[8] = L"\\\\.\\ :";
+    TargetDrive[4] = targetFolder[0];
+
+    // Open file pointer to the drive
+    hVol = CreateFileW(TargetDrive, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
     if(hVol == INVALID_HANDLE_VALUE){
         printf("Failed to open C drive.\n");
         return 1;
@@ -562,21 +567,26 @@ int wmain(int argc, wchar_t* argv[]){
                 if(GetFullPathByFileReference(hVol, usnRecord->FileReferenceNumber, fullPath, MAX_PATH)){
                     // Check if the file is in the specified folder
                     if(IsFileInFolder(fullPath, targetFolder)){
-                        // Print event message if the file is in the target folder
-
+                        
+                        // Check if blacklist is enabled
                         if(BlacklistEnabled){
+                            // Makes sure the file is not in one of the blacklists
                             for(int i = 0; i < NumOfBlacklists; i++)
                                 if(IsInFolder(fullPath, Blacklists[i]))
                                     ValidEvent = 0;
                         }
 
+                        // Check if whitelist is enabled
                         if(WhitelistEnabled){
-                            ValidEvent = 0;
+                            if(!BlacklistEnabled)
+                                ValidEvent = 0;
+                            // Makes sure the file is in one of the whitelists
                             for(int i = 0; i < NumOfWhitelists; i++)
                                 if(IsInFolder(fullPath, Whitelists[i]))
                                     ValidEvent = 1;
                         }
 
+                        // Makes sure the file event passes the checks before printing
                         if(ValidEvent){
                             FILETIME TempFileTime;
 
