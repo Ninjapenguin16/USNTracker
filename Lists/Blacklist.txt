@@ -1,1 +1,1 @@
-D:\test
+C:\Windows\System32\DriverStore\FileRepository\amdfendr.inf_amd64_987f8cede005f427\AMD\EeuDumps

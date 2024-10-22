@@ -310,7 +310,6 @@ int RestartAsAdmin(int argc, wchar_t* argv[]){
 
 void PrepareClose(int Signal){
 
-    printf("NOOOOO DONT CLOSE ME");
     CloseHandle(OutputCSV);
 
     exit(Signal);
@@ -422,6 +421,57 @@ int ReadFileToArray(LPCWSTR filename, LPCWSTR **lines, int *lineCount){
     return 0;
 }
 
+// Creates a USN Journal on the provided volume handle
+BOOL CreateUSNJournal(HANDLE hVolume){
+
+    CREATE_USN_JOURNAL_DATA journalData;
+    journalData.MaximumSize = 0;         // 0 means use the default maximum size (typically 128MB)
+    journalData.AllocationDelta = 0;     // 0 means use the default allocation delta
+
+    DWORD bytesReturned;
+    BOOL result = DeviceIoControl(
+        hVolume,                         // Handle to the volume
+        FSCTL_CREATE_USN_JOURNAL,        // Control code to create USN journal
+        &journalData,                    // Input buffer with journal data
+        sizeof(journalData),             // Size of input buffer
+        NULL,                            // No output buffer
+        0,                               // No output buffer size
+        &bytesReturned,                  // Number of bytes returned
+        NULL                             // Overlapped structure (not used)
+    );
+
+    return result;
+}
+
+// Checks if the volume is NTFS
+BOOL IsVolumeNTFS(LPCWSTR volumePath){
+
+    WCHAR fileSystemNameBuffer[16];
+    DWORD maximumComponentLength, fileSystemFlags;
+
+    BOOL success = GetVolumeInformationW(
+        volumePath,                      // Volume path (e.g., "C:\\")
+        NULL,                            // No need for volume name
+        0,                               // No need for volume name size
+        NULL,                            // No need for serial number
+        &maximumComponentLength,         // Maximum component length
+        &fileSystemFlags,                // File system flags
+        fileSystemNameBuffer,            // Buffer for the file system name
+        sizeof(fileSystemNameBuffer) / sizeof(WCHAR) // Size of the file system name buffer
+    );
+
+    // Check if the file system is NTFS
+    if(success){
+        if(wcscmp(fileSystemNameBuffer, L"NTFS") == 0)
+            return TRUE;
+    }
+    else{
+        printf("Failed to get volume information");
+    }
+
+    return FALSE;
+}
+
 int wmain(int argc, wchar_t* argv[]){
 
     if(argc != 1)
@@ -460,13 +510,16 @@ int wmain(int argc, wchar_t* argv[]){
         }
     }
 
+    if(!IsVolumeNTFS(targetFolder)){
+        printf("The specified drive is not formatted with NTFS");
+        return 1;
+    }
+
     const LPCWSTR CSVFileName = L"USNLogs.csv";
 
     // Check if CSV file already exists
     DWORD CSVFileAttributes = GetFileAttributes(CSVFileName);
     int CSVAlreadyExists = (CSVFileAttributes != INVALID_FILE_ATTRIBUTES && !(CSVFileAttributes & FILE_ATTRIBUTE_DIRECTORY));
-
-    //printf(CSVAlreadyExists ? "CSV Already Exists" : "CSV Doesn't Exist");
 
     OutputCSV = CreateFile(
         CSVFileName,               // File name
@@ -516,9 +569,16 @@ int wmain(int argc, wchar_t* argv[]){
 
     // Get the USN Journal's properties
     if(!DeviceIoControl(hVol, FSCTL_QUERY_USN_JOURNAL, NULL, 0, &usnJournalData, sizeof(usnJournalData), &bytesReturned, NULL)){
-        printf("Failed to query USN journal.\n");
-        CloseHandle(hVol);
-        return 1;
+        if(!CreateUSNJournal(hVol)){
+            printf("Failed to create a USN journal on the drive.\n");
+            CloseHandle(hVol);
+            return 1;
+        }
+        if(!DeviceIoControl(hVol, FSCTL_QUERY_USN_JOURNAL, NULL, 0, &usnJournalData, sizeof(usnJournalData), &bytesReturned, NULL)){
+            printf("Failed to query USN journal.\n");
+            CloseHandle(hVol);
+            return 1;
+        }
     }
 
     // Initialize Event Source
