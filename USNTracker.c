@@ -449,8 +449,12 @@ BOOL IsVolumeNTFS(LPCWSTR volumePath){
     WCHAR fileSystemNameBuffer[16];
     DWORD maximumComponentLength, fileSystemFlags;
 
+    WCHAR DrivePath[4] = L"C:\\";
+
+    DrivePath[0] = volumePath[0];
+
     BOOL success = GetVolumeInformationW(
-        volumePath,                      // Volume path (e.g., "C:\\")
+        DrivePath,                       // Drive path (e.g., "C:\\")
         NULL,                            // No need for volume name
         0,                               // No need for volume name size
         NULL,                            // No need for serial number
@@ -466,7 +470,7 @@ BOOL IsVolumeNTFS(LPCWSTR volumePath){
             return TRUE;
     }
     else{
-        printf("Failed to get volume information");
+        printf("Failed to get volume information\n");
     }
 
     return FALSE;
@@ -511,7 +515,8 @@ int wmain(int argc, wchar_t* argv[]){
     }
 
     if(!IsVolumeNTFS(targetFolder)){
-        printf("The specified drive is not formatted with NTFS");
+        printf("The specified drive is not formatted with NTFS\n");
+        MessageBox(NULL, L"The specified drive is not formatted with NTFS", L"Volume Error", MB_OK | MB_ICONERROR);
         return 1;
     }
 
@@ -531,7 +536,8 @@ int wmain(int argc, wchar_t* argv[]){
         NULL                         // No template file
     );
 
-    if (OutputCSV == INVALID_HANDLE_VALUE) {
+    if(OutputCSV == INVALID_HANDLE_VALUE){
+        printf("Failed to create/open USNLogs.csv\n");
         MessageBox(NULL, L"Failed to create/open USNLogs.csv", L"File Error", MB_OK | MB_ICONERROR);
         return 1;
     }
@@ -563,19 +569,22 @@ int wmain(int argc, wchar_t* argv[]){
     // Open file pointer to the drive
     hVol = CreateFileW(TargetDrive, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
     if(hVol == INVALID_HANDLE_VALUE){
-        printf("Failed to open C drive.\n");
+        printf("Failed to open target drive\n");
+        MessageBox(NULL, L"Failed to open target drive", L"Volume Error", MB_OK | MB_ICONERROR);
         return 1;
     }
 
     // Get the USN Journal's properties
     if(!DeviceIoControl(hVol, FSCTL_QUERY_USN_JOURNAL, NULL, 0, &usnJournalData, sizeof(usnJournalData), &bytesReturned, NULL)){
         if(!CreateUSNJournal(hVol)){
-            printf("Failed to create a USN journal on the drive.\n");
+            printf("Failed to create a USN journal on the drive\n");
+            MessageBox(NULL, L"Failed to create a USN journal on the drive", L"Volume Error", MB_OK | MB_ICONERROR);
             CloseHandle(hVol);
             return 1;
         }
         if(!DeviceIoControl(hVol, FSCTL_QUERY_USN_JOURNAL, NULL, 0, &usnJournalData, sizeof(usnJournalData), &bytesReturned, NULL)){
-            printf("Failed to query USN journal.\n");
+            printf("Failed to query USN journal\n");
+            MessageBox(NULL, L"Failed to query USN journal", L"USN Journal Error", MB_OK | MB_ICONERROR);
             CloseHandle(hVol);
             return 1;
         }
@@ -585,7 +594,8 @@ int wmain(int argc, wchar_t* argv[]){
     HANDLE hEventSource = RegisterEventSourceW(NULL, L"USNTracker");
 
     if(hEventSource == NULL){
-        printf("Failed to register the event source.\n");
+        printf("Failed to register the event source\n");
+        MessageBox(NULL, L"Failed to register the event source", L"Event Error", MB_OK | MB_ICONERROR);
         return 1;
     }
 
@@ -672,7 +682,8 @@ int wmain(int argc, wchar_t* argv[]){
             }
         }
         else{
-            printf("Failed to read USN journal.\n");
+            printf("Failed to read USN journal\n");
+            MessageBox(NULL, L"Failed to read USN journal", L"USN Journal Error", MB_OK | MB_ICONERROR);
             break;
         }
     }
