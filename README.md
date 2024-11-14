@@ -12,5 +12,5 @@ All paths given to the program, both in the list files and with the -f flag, mus
 ## Program Options
 -b            | Enable the blacklist\
 -w            | Enable the whitelist\
--f            | Specify a custom parent folder, default is C:\ (Cannot be outside the C: Drive for now)\
+-f            | Specify a custom parent folder, default is C:\ (Can now be set to other NTFS drive)\
 -h or --help  | Display the program options shown here
