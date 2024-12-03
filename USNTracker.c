@@ -126,7 +126,7 @@ void PrintEventReason(DWORD reason, wchar_t *EventReasons){
         if(!FirstReason)
             wcscat(EventReasons, L" | ");
         FirstReason = 0;
-        wcscat(EventReasons, L"Renamed (new name");
+        wcscat(EventReasons, L"Renamed (new name)");
     }
     if(reason & USN_REASON_RENAME_OLD_NAME){
         wprintf(L"  - Renamed (old name)\n");
